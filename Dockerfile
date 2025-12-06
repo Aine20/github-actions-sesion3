@@ -1,27 +1,26 @@
-# ======================
-# STAGE 1: BUILD
-# ======================
 FROM node:18 AS build
 
 WORKDIR /app
 
-COPY package*.json ./
+# Copia los package.json desde la carpeta app
+COPY app/package*.json ./
+
 RUN npm install
 
-COPY . .
+# Copia TODO el código de /app dentro del contenedor
+COPY app/. .
 
-# RUN npm run build  # si algún día necesitas un build
-
-# ======================
-# STAGE 2: PRODUCTION
-# ======================
+# ------------------------------
+# STAGE 2: Producción
+# ------------------------------
 FROM node:18-alpine AS production
 
 WORKDIR /app
 
-# Copiar SOLO lo necesario desde build
-COPY --from=build /app/package*.json ./
-COPY --from=build /app/node_modules ./node_modules
+COPY app/package*.json ./
+RUN npm install --production
+
+# Copiamos todo desde build
 COPY --from=build /app ./
 
 ENV NODE_ENV=production
@@ -29,4 +28,4 @@ EXPOSE 3000
 
 USER node
 
-CMD ["node", "app/index.js"]
+CMD ["node", "index.js"]
