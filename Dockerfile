@@ -1,3 +1,6 @@
+# ======================
+# STAGE 1: BUILD
+# ======================
 FROM node:18 AS build
 
 WORKDIR /app
@@ -6,19 +9,20 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-# Si tuvieras un proceso de build (React, Nest, etc.), aquí iría:
-# RUN npm run build
 
-# Stage 2: Runtime (más ligero)
+# RUN npm run build  # si algún día necesitas un build
+
+# ======================
+# STAGE 2: PRODUCTION
+# ======================
 FROM node:18-alpine AS production
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --production
-
-# Copiamos solo lo necesario desde el stage de build
-COPY --from=build /app ./ 
+# Copiar SOLO lo necesario desde build
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app ./
 
 ENV NODE_ENV=production
 EXPOSE 3000
